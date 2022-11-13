@@ -21,13 +21,13 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public UserFullDto createUser(@Valid @RequestBody UserFullDto userFullDto){
+    public UserFullDto createUser(@Valid @RequestBody UserFullDto userFullDto) {
         log.info("Создан пользователь с id = {}", userFullDto.getId());
         return userService.createUser(userFullDto);
     }
 
     @DeleteMapping(path = "/{userId}")
-    public void deleteUser(@PathVariable Long userId){
+    public void deleteUser(@PathVariable Long userId) {
         log.info("Удален пользователь с id = {}", userId);
         userService.deleteUser(userId);
     }

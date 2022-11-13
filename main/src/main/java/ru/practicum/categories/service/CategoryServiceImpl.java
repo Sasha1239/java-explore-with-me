@@ -56,7 +56,7 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryMapper.toCategoryDto(category);
     }
 
-    private Category validationCategory(Long categoryId){
+    private Category validationCategory(Long categoryId) {
         return categoryRepository.findById(categoryId).orElseThrow(() ->
                 new NotFoundException("Неверный идентификатор категории"));
     }
