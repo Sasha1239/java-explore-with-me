@@ -1,63 +1,35 @@
 package ru.practicum.utilits;
 
-import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.lang.NonNull;
+import ru.practicum.exceptions.ValidationException;
 
-@AllArgsConstructor
-public class PageableRequest implements Pageable {
-    private final Integer from;
-    private final Integer size;
-    private final Sort sort;
+public class PageableRequest extends PageRequest {
+    private final long offset;
 
-    @Override
-    public int getPageNumber() {
-        return 0;
+    private PageableRequest(int from, int size, Sort sort) {
+        super(from / size, size, sort);
+        offset = from;
     }
 
-    @Override
-    public int getPageSize() {
-        return size;
+    public static PageableRequest of(int from, int size) {
+        validationPage(from, size);
+        return new PageableRequest(from, size, Sort.unsorted());
+    }
+
+    public static PageableRequest of(int from, int size, Sort sort) {
+        validationPage(from, size);
+        return new PageableRequest(from, size, sort);
+    }
+
+    private static void validationPage(int from, int size) {
+        if (from < 0 || size < 1) {
+            throw new ValidationException("No positive values in the pagination");
+        }
     }
 
     @Override
     public long getOffset() {
-        return from;
-    }
-
-    @Override
-    @NonNull
-    public Sort getSort() {
-        return this.sort;
-    }
-
-    @Override
-    @NonNull
-    public Pageable next() {
-        return new PageableRequest(this.getPageNumber() + 1, this.getPageSize(), this.getSort());
-    }
-
-    @Override
-    @NonNull
-    public Pageable previousOrFirst() {
-        return this;
-    }
-
-    @Override
-    @NonNull
-    public Pageable first() {
-        return this;
-    }
-
-    @Override
-    @NonNull
-    public Pageable withPage(int pageNumber) {
-        return new PageableRequest(pageNumber, this.getPageSize(), this.getSort());
-    }
-
-    @Override
-    public boolean hasPrevious() {
-        return false;
+        return offset;
     }
 }

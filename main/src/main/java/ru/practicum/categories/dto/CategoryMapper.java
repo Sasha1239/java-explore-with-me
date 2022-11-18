@@ -1,5 +1,6 @@
 package ru.practicum.categories.dto;
 
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 import ru.practicum.categories.model.Category;
 
@@ -17,7 +18,7 @@ public class CategoryMapper {
         return new Category(categoryDto.getId(), categoryDto.getName());
     }
 
-    public List<CategoryDto> toCategoryDtoList(List<Category> categories) {
+    public List<CategoryDto> toCategoryDtoPageList(Page<Category> categories) {
         return categories.stream().map(this::toCategoryDto).collect(Collectors.toList());
     }
 }

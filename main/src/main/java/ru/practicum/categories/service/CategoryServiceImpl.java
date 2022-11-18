@@ -1,8 +1,7 @@
 package ru.practicum.categories.service;
 
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import ru.practicum.categories.dto.CategoryDto;
 import ru.practicum.categories.dto.CategoryMapper;
@@ -32,6 +31,9 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryDto updateCategory(CategoryDto categoryDto) {
         Category category = validationCategory(categoryDto.getId());
         category.setName(categoryDto.getName());
+
+        categoryRepository.save(category);
+
         return categoryMapper.toCategoryDto(category);
     }
 
@@ -45,8 +47,8 @@ public class CategoryServiceImpl implements CategoryService {
     //Получение всех категорий
     @Override
     public List<CategoryDto> getAllCategories(Integer from, Integer size) {
-        List<Category> categories = categoryRepository.findAll(getPageable(from, size)).getContent();
-        return categoryMapper.toCategoryDtoList(categories);
+        Page<Category> categories = categoryRepository.findAll(PageableRequest.of(from, size));
+        return categoryMapper.toCategoryDtoPageList(categories);
     }
 
     //Получение категории
@@ -59,9 +61,5 @@ public class CategoryServiceImpl implements CategoryService {
     private Category validationCategory(Long categoryId) {
         return categoryRepository.findById(categoryId).orElseThrow(() ->
                 new NotFoundException("Неверный идентификатор категории"));
-    }
-
-    private Pageable getPageable(Integer from, Integer size) {
-        return new PageableRequest(from, size, Sort.unsorted());
     }
 }

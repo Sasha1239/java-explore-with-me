@@ -2,10 +2,9 @@ package ru.practicum.users.service;
 
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.exceptions.NotFoundException;
-import ru.practicum.users.dto.UserFullDto;
+import ru.practicum.users.dto.UserDto;
 import ru.practicum.users.dto.UserMapper;
 import ru.practicum.users.model.User;
 import ru.practicum.users.repository.UserRepository;
@@ -22,17 +21,19 @@ public class UserServiceImpl implements UserService {
 
     //Создание пользователя
     @Override
-    public UserFullDto createUser(UserFullDto userFullDto) {
-        User user = userRepository.save(userMapper.fromFullDtoToUser(userFullDto));
+    public UserDto createUser(UserDto userDto) {
+        User user = userRepository.save(userMapper.fromFullDtoToUser(userDto));
         return userMapper.toUserFullDto(user);
     }
 
     //Получение пользователей
     @Override
-    public List<UserFullDto> getAllUsers(Long[] ids, Integer from, Integer size) {
+    public List<UserDto> getAllUsers(Long[] ids, Integer from, Integer size) {
+        Pageable pageable = PageableRequest.of(from, size);
+
         List<User> users;
 
-        users = (ids == null) ? userRepository.findAll(getPageable(from, size)).getContent()
+        users = (ids == null) ? userRepository.findAll(pageable).getContent()
                 : userRepository.findAllById(Arrays.asList(ids));
 
         return userMapper.toUserFullDtoList(users);
@@ -50,9 +51,5 @@ public class UserServiceImpl implements UserService {
     public User getUser(Long userId) {
         return userRepository.findById(userId).orElseThrow(() ->
                 new NotFoundException("Неверный идентификатор пользователя"));
-    }
-
-    private Pageable getPageable(Integer from, Integer size) {
-        return new PageableRequest(from, size, Sort.unsorted());
     }
 }

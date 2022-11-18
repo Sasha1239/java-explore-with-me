@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.users.dto.UserFullDto;
+import ru.practicum.users.dto.UserDto;
 import ru.practicum.users.service.UserService;
 
 import javax.validation.Valid;
@@ -21,9 +21,9 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public UserFullDto createUser(@Valid @RequestBody UserFullDto userFullDto) {
-        log.info("Создан пользователь с id = {}", userFullDto.getId());
-        return userService.createUser(userFullDto);
+    public UserDto createUser(@Valid @RequestBody UserDto userDto) {
+        log.info("Создан пользователь с id = {}", userDto.getId());
+        return userService.createUser(userDto);
     }
 
     @DeleteMapping(path = "/{userId}")
@@ -33,9 +33,9 @@ public class UserController {
     }
 
     @GetMapping
-    public List<UserFullDto> getAllUsers(@RequestParam(value = "ids", required = false) Long[] ids,
-                                         @PositiveOrZero @RequestParam(value = "from", defaultValue = "0") Integer from,
-                                         @Positive @RequestParam(value = "size", defaultValue = "10") Integer size) {
+    public List<UserDto> getAllUsers(@RequestParam(value = "ids", required = false) Long[] ids,
+                                     @PositiveOrZero @RequestParam(value = "from", defaultValue = "0") Integer from,
+                                     @Positive @RequestParam(value = "size", defaultValue = "10") Integer size) {
         return userService.getAllUsers(ids, from, size);
     }
 }
