@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestClientException;
 import ru.practicum.events.client.EventClient;
 import ru.practicum.events.dto.EventFullDto;
 import ru.practicum.events.dto.EventNewDto;
@@ -94,9 +95,15 @@ public class EventController {
     }
 
     @GetMapping("/events/{id}")
-    public EventFullDto getEvent(@PathVariable(name = "id") Long eventId, HttpServletRequest httpServletRequest) {
-        eventClient.addHit(httpServletRequest);
+    public EventFullDto getEvent(@PathVariable(name = "id") Long eventId, HttpServletRequest request) {
         log.info("Получено событие c id: {}", eventId);
+
+        try {
+            eventClient.addHit(request);
+        } catch (RestClientException e) {
+            log.info("Соединение с сервисом отсутствует");
+        }
+
         return eventService.getPublicEvent(eventId);
     }
 }

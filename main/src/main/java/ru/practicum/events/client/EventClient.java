@@ -35,7 +35,8 @@ public class EventClient {
     public ResponseEntity<List<ViewStatisticDto>> getHits(LocalDateTime start, LocalDateTime end, String[] uris,
                                                           boolean unique) {
         return restTemplateBuilder.exchange("/stats?start={start}&end={end}&uris={uris}&unique={unique}",
-                HttpMethod.GET, getHttpEntity(null), new ParameterizedTypeReference<>() {}, encodeDate(start),
+                HttpMethod.GET, getHttpEntity(null), new ParameterizedTypeReference<>() {
+                }, encodeDate(start),
                 encodeDate(end), uris, unique);
     }
 

@@ -5,5 +5,5 @@ public enum ErrorStatus {
     BAD_REQUEST,
     NOT_FOUND,
     CONFLICT,
-    METHOD_NOT_ALLOWED,
+    METHOD_NOT_ALLOWED
 }

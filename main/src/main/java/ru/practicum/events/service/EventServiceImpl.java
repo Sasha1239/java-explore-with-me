@@ -7,7 +7,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.categories.dto.CategoryMapper;
 import ru.practicum.categories.service.CategoryService;
-import ru.practicum.events.client.EventClient;
 import ru.practicum.events.dto.*;
 import ru.practicum.events.model.Event;
 import ru.practicum.events.model.QEvent;
@@ -36,7 +35,6 @@ import java.util.stream.Collectors;
 public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
-    private final EventClient eventClient;
 
     private final UserService userService;
     private final UserMapper userMapper;
@@ -322,8 +320,6 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Такого события не существует");
         }
 
-        setViews(List.of(event));
-
         return eventMapper.toEventFullDto(event);
     }
 
@@ -366,16 +362,5 @@ public class EventServiceImpl implements EventService {
         if (eventNewDto.getTitle() != null) {
             event.setTitle(eventNewDto.getTitle());
         }
-    }
-
-    private void setViews(List<Event> events) {
-        events.forEach(event -> {
-            List<ViewStatisticDto> views = eventClient.getHits(event.getCreatedOn(), LocalDateTime.now(),
-                    new String[]{"/events/" + event.getId()}, false).getBody();
-
-            if (views != null && views.size() > 0) {
-                event.setViews(views.get(0).getHits());
-            }
-        });
     }
 }
