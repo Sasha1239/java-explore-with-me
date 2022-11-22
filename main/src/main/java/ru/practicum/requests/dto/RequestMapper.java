@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 @Component
 public class RequestMapper {
 
-    private final DateFormatterCustom dateFormatterCustom = new DateFormatterCustom();
+    private static final DateFormatterCustom dateFormatterCustom = new DateFormatterCustom();
 
-    public RequestDto toRequestDto(Request request) {
+    public static RequestDto toRequestDto(Request request) {
         return new RequestDto(request.getId(),
                 request.getEvent().getId(),
                 request.getRequester().getId(),
@@ -20,7 +20,7 @@ public class RequestMapper {
                 request.getStatus().toString());
     }
 
-    public List<RequestDto> toRequestDtoList(List<Request> requests) {
-        return requests.stream().map(this::toRequestDto).collect(Collectors.toList());
+    public static List<RequestDto> toRequestDtoList(List<Request> requests) {
+        return requests.stream().map(RequestMapper::toRequestDto).collect(Collectors.toList());
     }
 }

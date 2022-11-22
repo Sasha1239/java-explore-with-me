@@ -2,25 +2,24 @@ package ru.practicum.compilations.controller;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.compilations.dto.CompilationDto;
 import ru.practicum.compilations.dto.CompilationNewDto;
 import ru.practicum.compilations.service.CompilationService;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @RestController
-@Validated
 @AllArgsConstructor
 @Slf4j
 public class CompilationController {
     private final CompilationService compilationService;
 
     @PostMapping("/admin/compilations")
-    public CompilationDto createCompilation(@RequestBody CompilationNewDto compilationNewDto) {
+    public CompilationDto createCompilation(@Valid @RequestBody CompilationNewDto compilationNewDto) {
         log.info("Добавлена подборка событий {}", compilationNewDto);
         return compilationService.createCompilation(compilationNewDto);
     }

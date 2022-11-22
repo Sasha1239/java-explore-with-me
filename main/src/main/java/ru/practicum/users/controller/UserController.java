@@ -2,7 +2,6 @@ package ru.practicum.users.controller;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.users.dto.UserDto;
 import ru.practicum.users.service.UserService;
@@ -14,7 +13,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = "/admin/users")
-@Validated
 @AllArgsConstructor
 @Slf4j
 public class UserController {

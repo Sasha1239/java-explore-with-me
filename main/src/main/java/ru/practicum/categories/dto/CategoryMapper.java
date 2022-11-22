@@ -10,15 +10,15 @@ import java.util.stream.Collectors;
 @Component
 public class CategoryMapper {
 
-    public CategoryDto toCategoryDto(Category category) {
+    public static CategoryDto toCategoryDto(Category category) {
         return new CategoryDto(category.getId(), category.getName());
     }
 
-    public Category fromCategoryDto(CategoryDto categoryDto) {
+    public static Category fromCategoryDto(CategoryDto categoryDto) {
         return new Category(categoryDto.getId(), categoryDto.getName());
     }
 
-    public List<CategoryDto> toCategoryDtoPageList(Page<Category> categories) {
-        return categories.stream().map(this::toCategoryDto).collect(Collectors.toList());
+    public static List<CategoryDto> toCategoryDtoPageList(Page<Category> categories) {
+        return categories.stream().map(CategoryMapper::toCategoryDto).collect(Collectors.toList());
     }
 }

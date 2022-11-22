@@ -15,9 +15,9 @@ import java.util.stream.Collectors;
 
 @Component
 public class EventMapper {
-    private final DateFormatterCustom dateFormatterCustom = new DateFormatterCustom();
+    private static final DateFormatterCustom dateFormatterCustom = new DateFormatterCustom();
 
-    public EventFullDto toEventFullDto(Event event) {
+    public static EventFullDto toEventFullDto(Event event) {
         return new EventFullDto(event.getId(),
                 event.getAnnotation(),
                 new CategoryDto(event.getCategory().getId(), event.getCategory().getName()),
@@ -36,7 +36,7 @@ public class EventMapper {
                 event.getViews());
     }
 
-    public EventShortDto toEventShortDto(Event event) {
+    public static EventShortDto toEventShortDto(Event event) {
         return new EventShortDto(event.getId(),
                 event.getAnnotation(),
                 new CategoryDto(event.getCategory().getId(), event.getCategory().getName()),
@@ -48,7 +48,7 @@ public class EventMapper {
                 event.getViews());
     }
 
-    public Event fromEventNewDto(EventNewDto eventNewDto) {
+    public static Event fromEventNewDto(EventNewDto eventNewDto) {
         return new Event(eventNewDto.getEventId(),
                 eventNewDto.getAnnotation(),
                 new Category(eventNewDto.getCategory(), null),
@@ -68,15 +68,15 @@ public class EventMapper {
                 null);
     }
 
-    public List<EventFullDto> toEventFullDtoPageList(Page<Event> events) {
-        return events.stream().map(this::toEventFullDto).collect(Collectors.toList());
+    public static List<EventFullDto> toEventFullDtoPageList(Page<Event> events) {
+        return events.stream().map(EventMapper::toEventFullDto).collect(Collectors.toList());
     }
 
-    public List<EventShortDto> toEventShortDtoPageList(Page<Event> events) {
-        return events.stream().map(this::toEventShortDto).collect(Collectors.toList());
+    public static List<EventShortDto> toEventShortDtoPageList(Page<Event> events) {
+        return events.stream().map(EventMapper::toEventShortDto).collect(Collectors.toList());
     }
 
-    public List<EventShortDto> toEventShortDtoList(List<Event> events) {
-        return events.stream().map(this::toEventShortDto).collect(Collectors.toList());
+    public static List<EventShortDto> toEventShortDtoList(List<Event> events) {
+        return events.stream().map(EventMapper::toEventShortDto).collect(Collectors.toList());
     }
 }

@@ -22,10 +22,7 @@ import java.util.List;
 @AllArgsConstructor(onConstructor_ = {@Lazy})
 public class RequestServiceImpl implements RequestService {
     private RequestRepository requestRepository;
-    private RequestMapper requestMapper;
-
     private final UserService userService;
-
     private final EventService eventService;
 
 
@@ -57,7 +54,7 @@ public class RequestServiceImpl implements RequestService {
         request.setRequester(userService.getUser(userId));
         request.setCreated(LocalDateTime.now());
 
-        return requestMapper.toRequestDto(requestRepository.save(request));
+        return RequestMapper.toRequestDto(requestRepository.save(request));
     }
 
     //Отменена заявки пользователем
@@ -77,7 +74,7 @@ public class RequestServiceImpl implements RequestService {
 
         request.setStatus(Status.CANCELED);
 
-        return requestMapper.toRequestDto(requestRepository.save(request));
+        return RequestMapper.toRequestDto(requestRepository.save(request));
     }
 
     //Получение заявок пользователя
@@ -85,14 +82,14 @@ public class RequestServiceImpl implements RequestService {
     public List<RequestDto> getAllRequestsUser(Long userId) {
         List<Request> requests = requestRepository.findAllByRequesterId(userId);
 
-        return requestMapper.toRequestDtoList(requests);
+        return RequestMapper.toRequestDtoList(requests);
     }
 
     @Override
     public List<RequestDto> getAllRequestsEvent(Long eventId) {
         List<Request> requests = requestRepository.findAllByEventId(eventId);
 
-        return requestMapper.toRequestDtoList(requests);
+        return RequestMapper.toRequestDtoList(requests);
     }
 
     @Override

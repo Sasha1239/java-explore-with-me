@@ -2,18 +2,17 @@ package ru.practicum.events.controller;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.events.dto.EventFullDto;
 import ru.practicum.events.dto.EventNewDto;
 import ru.practicum.events.service.EventService;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping(path = "/admin/events")
-@Validated
 @AllArgsConstructor
 @Slf4j
 public class EventControllerAdmin {
@@ -26,7 +25,7 @@ public class EventControllerAdmin {
     }
 
     @PutMapping("{eventId}")
-    public EventFullDto updateEventAdmin(@PathVariable Long eventId, @RequestBody EventNewDto eventNewDto) {
+    public EventFullDto updateEventAdmin(@PathVariable Long eventId, @Valid @RequestBody EventNewDto eventNewDto) {
         log.info("Администратором обновлено событие c id {}", eventId);
         return eventService.updateEventAdmin(eventId, eventNewDto);
     }

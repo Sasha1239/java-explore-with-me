@@ -1,8 +1,6 @@
 package ru.practicum.events.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import org.hibernate.annotations.WhereJoinTable;
 import ru.practicum.categories.model.Category;
@@ -13,7 +11,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -77,5 +76,5 @@ public class Event {
             joinColumns = @JoinColumn(name = "event_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
-    List<User> participantList = new ArrayList<>();
+    private List<User> participantList = new ArrayList<>();
 }

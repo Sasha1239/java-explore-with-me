@@ -18,14 +18,13 @@ import java.util.List;
 @AllArgsConstructor
 public class EndpointHitServiceImpl implements EndpointHitService {
 
-    private final EndpointHitMapper endpointHitMapper;
     private final EndpointHitRepository endpointHitRepository;
 
     private final DateFormatterCustom dateFormatterCustom;
 
     @Override
     public void addEndpointHit(EndpointHitDto endpointHitDto) {
-        endpointHitRepository.save(endpointHitMapper.fromEndpointHitDto(endpointHitDto));
+        endpointHitRepository.save(EndpointHitMapper.fromEndpointHitDto(endpointHitDto));
     }
 
     @Override
@@ -53,7 +52,7 @@ public class EndpointHitServiceImpl implements EndpointHitService {
                     dateFormatterCustom.stringToDate(viewStatisticSpec.getEnd()));
         }
 
-        List<ViewStatisticDto> viewStats = endpointHitMapper.toDto(endpointHits);
+        List<ViewStatisticDto> viewStats = EndpointHitMapper.toDto(endpointHits);
 
         for (ViewStatisticDto viewStat : viewStats) {
             viewStat.setHits(endpointHitRepository.getHits(viewStat.getUri()));

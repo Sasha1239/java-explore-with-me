@@ -17,13 +17,12 @@ import java.util.List;
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
-    private final CategoryMapper categoryMapper;
 
     //Создание категории
     @Override
     public CategoryDto createCategory(CategoryDto categoryDto) {
-        Category category = categoryRepository.save(categoryMapper.fromCategoryDto(categoryDto));
-        return categoryMapper.toCategoryDto(category);
+        Category category = categoryRepository.save(CategoryMapper.fromCategoryDto(categoryDto));
+        return CategoryMapper.toCategoryDto(category);
     }
 
     //Обновление категории
@@ -34,7 +33,7 @@ public class CategoryServiceImpl implements CategoryService {
 
         categoryRepository.save(category);
 
-        return categoryMapper.toCategoryDto(category);
+        return CategoryMapper.toCategoryDto(category);
     }
 
     //Удаление категории
@@ -48,14 +47,14 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public List<CategoryDto> getAllCategories(Integer from, Integer size) {
         Page<Category> categories = categoryRepository.findAll(PageableRequest.of(from, size));
-        return categoryMapper.toCategoryDtoPageList(categories);
+        return CategoryMapper.toCategoryDtoPageList(categories);
     }
 
     //Получение категории
     @Override
     public CategoryDto getCategory(Long categoryId) {
         Category category = validationCategory(categoryId);
-        return categoryMapper.toCategoryDto(category);
+        return CategoryMapper.toCategoryDto(category);
     }
 
     private Category validationCategory(Long categoryId) {

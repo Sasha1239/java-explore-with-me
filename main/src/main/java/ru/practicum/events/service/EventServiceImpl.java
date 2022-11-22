@@ -2,6 +2,7 @@ package ru.practicum.events.service;
 
 import com.querydsl.core.BooleanBuilder;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -34,16 +35,9 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
-    private final EventMapper eventMapper;
-
     private final UserService userService;
-    private final UserMapper userMapper;
-
     private final CategoryService categoryService;
-    private final CategoryMapper categoryMapper;
-
     private final RequestService requestService;
-    private final RequestMapper requestMapper;
 
     private final DateFormatterCustom dateFormatterCustom;
 
@@ -58,7 +52,7 @@ public class EventServiceImpl implements EventService {
             eventRepository.save(event);
         }
 
-        return eventMapper.toEventFullDto(event);
+        return EventMapper.toEventFullDto(event);
     }
 
     //Обновление события админом
@@ -72,7 +66,7 @@ public class EventServiceImpl implements EventService {
         Optional.ofNullable(eventNewDto.getRequestModeration()).ifPresent(event::setRequestModeration);
 
         eventRepository.save(event);
-        return eventMapper.toEventFullDto(event);
+        return EventMapper.toEventFullDto(event);
     }
 
     //Получение всех событий админом
@@ -103,7 +97,7 @@ public class EventServiceImpl implements EventService {
         rangeEndOptional.ifPresent(end -> builder.and(QEvent.event.eventDate
                 .before(dateFormatterCustom.stringToDate(end))));
 
-        return eventMapper.toEventFullDtoPageList(eventRepository.findAll(builder, pageable));
+        return EventMapper.toEventFullDtoPageList(eventRepository.findAll(builder, pageable));
     }
 
     //Отклонение события админом
@@ -116,7 +110,7 @@ public class EventServiceImpl implements EventService {
             eventRepository.save(event);
         }
 
-        return eventMapper.toEventFullDto(event);
+        return EventMapper.toEventFullDto(event);
     }
 
 
@@ -132,15 +126,15 @@ public class EventServiceImpl implements EventService {
             throw new ValidationException("Описание события не может быть пустым");
         }
 
-        Event event = eventMapper.fromEventNewDto(eventNewDto);
+        Event event = EventMapper.fromEventNewDto(eventNewDto);
 
-        event.setCategory(categoryMapper.fromCategoryDto(categoryService.getCategory(eventNewDto.getCategory())));
-        event.setInitiator(userMapper.fromFullDtoToUser(userService.getAllUsers(new Long[]{userId}, 0, 1)
+        event.setCategory(CategoryMapper.fromCategoryDto(categoryService.getCategory(eventNewDto.getCategory())));
+        event.setInitiator(UserMapper.fromFullDtoToUser(userService.getAllUsers(new Long[]{userId}, 0, 1)
                 .get(0)));
 
         eventRepository.save(event);
 
-        return eventMapper.toEventFullDto(event);
+        return EventMapper.toEventFullDto(event);
     }
 
     //Обновление события
@@ -162,7 +156,7 @@ public class EventServiceImpl implements EventService {
 
         eventRepository.save(event);
 
-        return eventMapper.toEventFullDto(event);
+        return EventMapper.toEventFullDto(event);
     }
 
     //Получение всех событий пользователя
@@ -172,7 +166,7 @@ public class EventServiceImpl implements EventService {
 
         List<Event> events = eventRepository.findAllByInitiatorId(userId, pageable);
 
-        return eventMapper.toEventShortDtoList(events);
+        return EventMapper.toEventShortDtoList(events);
     }
 
     //Получение события пользователем
@@ -184,7 +178,7 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Такого события не существует");
         }
 
-        return eventMapper.toEventFullDto(event);
+        return EventMapper.toEventFullDto(event);
     }
 
     //Отмена события пользователем
@@ -203,7 +197,7 @@ public class EventServiceImpl implements EventService {
 
         eventRepository.save(event);
 
-        return eventMapper.toEventFullDto(event);
+        return EventMapper.toEventFullDto(event);
     }
 
     //Получение запросов на участие в событии пользователя
@@ -225,7 +219,7 @@ public class EventServiceImpl implements EventService {
         Request request = requestService.getRequest(requestId);
 
         if (event.getParticipantLimit() == 0 || !event.getRequestModeration()) {
-            return requestMapper.toRequestDto(request);
+            return RequestMapper.toRequestDto(request);
         }
         if (event.getConfirmedRequests() == event.getParticipantLimit()) {
             throw new ValidationException("Достигнут лимит запросов на участие в событии");
@@ -240,7 +234,7 @@ public class EventServiceImpl implements EventService {
 
         requestService.addRequest(request);
 
-        return requestMapper.toRequestDto(request);
+        return RequestMapper.toRequestDto(request);
     }
 
     //Отклонение заявки
@@ -258,7 +252,7 @@ public class EventServiceImpl implements EventService {
 
         requestService.addRequest(request);
 
-        return requestMapper.toRequestDto(request);
+        return RequestMapper.toRequestDto(request);
     }
 
     @Override
@@ -308,7 +302,22 @@ public class EventServiceImpl implements EventService {
         rangeEndOptional.ifPresent(end -> builder.and(QEvent.event.eventDate
                 .before(dateFormatterCustom.stringToDate(end))));
 
-        return eventMapper.toEventShortDtoPageList(eventRepository.findAll(builder, PageableRequest.of(from, size)));
+        Page<Event> events = eventRepository.findAll(builder, PageableRequest.of(from, size));
+
+        sortOptional.flatMap(s -> Optional.ofNullable(EventSort.from(s))).ifPresent(sort -> {
+            switch (sort) {
+                case EVENT_DATE:
+                    events.stream().sorted(Comparator.comparing(Event::getEventDate).reversed());
+                    break;
+                case VIEWS:
+                    events.stream().sorted(Comparator.comparing(Event::getViews).reversed());
+                    break;
+                default:
+                    events.stream().sorted(Comparator.comparing(Event::getId));
+            }
+        });
+
+        return EventMapper.toEventShortDtoPageList(events);
     }
 
     //Получение события
@@ -320,7 +329,7 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Такого события не существует");
         }
 
-        return eventMapper.toEventFullDto(event);
+        return EventMapper.toEventFullDto(event);
     }
 
     private Event validationEvent(Long eventId) {
@@ -344,7 +353,7 @@ public class EventServiceImpl implements EventService {
             event.setAnnotation(eventNewDto.getAnnotation());
         }
         if (eventNewDto.getCategory() != null) {
-            event.setCategory(categoryMapper.fromCategoryDto(categoryService.getCategory(eventNewDto.getCategory())));
+            event.setCategory(CategoryMapper.fromCategoryDto(categoryService.getCategory(eventNewDto.getCategory())));
         }
         if (eventNewDto.getDescription() != null) {
             event.setDescription(eventNewDto.getDescription());

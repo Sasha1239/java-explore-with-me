@@ -12,27 +12,25 @@ import java.util.stream.Collectors;
 @Component
 public class CompilationMapper {
 
-    private final EventMapper eventMapper = new EventMapper();
-
-    public CompilationDto toCompilationDto(Compilation compilation) {
+    public static CompilationDto toCompilationDto(Compilation compilation) {
         return new CompilationDto(compilation.getId(),
-                eventMapper.toEventShortDtoList(compilation.getEvents()),
+                EventMapper.toEventShortDtoList(compilation.getEvents()),
                 compilation.isPinned(),
                 compilation.getTitle());
     }
 
-    public Compilation fromCompilationDto(CompilationNewDto compilationNewDto) {
+    public static Compilation fromCompilationDto(CompilationNewDto compilationNewDto) {
         return new Compilation(compilationNewDto.getId(),
                 getIds(compilationNewDto.getEvents()),
                 compilationNewDto.isPinned(),
                 compilationNewDto.getTitle());
     }
 
-    public List<CompilationDto> toCompilationDtoList(List<Compilation> compilations) {
-        return compilations.stream().map(this::toCompilationDto).collect(Collectors.toList());
+    public static List<CompilationDto> toCompilationDtoList(List<Compilation> compilations) {
+        return compilations.stream().map(CompilationMapper::toCompilationDto).collect(Collectors.toList());
     }
 
-    private List<Event> getIds(List<Long> ids) {
+    private static List<Event> getIds(List<Long> ids) {
         List<Event> events = new ArrayList<>();
 
         for (int i = 0; i < ids.size(); i++) {

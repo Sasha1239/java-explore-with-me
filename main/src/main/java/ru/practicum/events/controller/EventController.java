@@ -2,7 +2,6 @@ package ru.practicum.events.controller;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClientException;
 import ru.practicum.events.client.EventClient;
@@ -20,7 +19,6 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@Validated
 @AllArgsConstructor
 @Slf4j
 public class EventController {
@@ -88,7 +86,13 @@ public class EventController {
                                             @RequestParam Optional<Boolean> onlyAvailable,
                                             @RequestParam Optional<String> sort,
                                             @RequestParam(defaultValue = "0") int from,
-                                            @RequestParam(defaultValue = "20") int size) {
+                                            @RequestParam(defaultValue = "20") int size, HttpServletRequest request) {
+
+        try {
+            eventClient.addHit(request);
+        } catch (RestClientException e) {
+            log.info("Соединение с сервисом отсутствует");
+        }
 
         return eventService.getAllPublicEvents(text, categories, paid,
                 rangeStart, rangeEnd, onlyAvailable, sort, from, size);

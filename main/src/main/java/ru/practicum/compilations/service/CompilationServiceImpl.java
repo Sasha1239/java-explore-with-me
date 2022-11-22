@@ -19,7 +19,6 @@ import java.util.List;
 @AllArgsConstructor
 public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
-    private final CompilationMapper compilationMapper;
 
     private final EventService eventService;
 
@@ -30,10 +29,10 @@ public class CompilationServiceImpl implements CompilationService {
             throw new ValidationException("Заголовок подборки не может быть пустым");
         }
 
-        Compilation compilation = compilationRepository.save(compilationMapper.fromCompilationDto(compilationNewDto));
+        Compilation compilation = compilationRepository.save(CompilationMapper.fromCompilationDto(compilationNewDto));
         compilation.getEvents().replaceAll(event -> eventService.getEventPrivate(event.getId()));
 
-        return compilationMapper.toCompilationDto(compilation);
+        return CompilationMapper.toCompilationDto(compilation);
     }
 
     //Получение подборки
@@ -41,7 +40,7 @@ public class CompilationServiceImpl implements CompilationService {
     public CompilationDto getCompilation(Long compilationId) {
         Compilation compilation = validationCompilation(compilationId);
 
-        return compilationMapper.toCompilationDto(compilation);
+        return CompilationMapper.toCompilationDto(compilation);
     }
 
     //Получение всех подборок
@@ -49,7 +48,7 @@ public class CompilationServiceImpl implements CompilationService {
     public List<CompilationDto> getAllCompilations(boolean pinned, Integer from, Integer size) {
         List<Compilation> compilations = compilationRepository.findAllByPinnedIs(pinned, PageableRequest.of(from, size));
 
-        return compilationMapper.toCompilationDtoList(compilations);
+        return CompilationMapper.toCompilationDtoList(compilations);
     }
 
     //Удаление подборки
