@@ -2,12 +2,14 @@ package ru.practicum.events.service;
 
 import com.querydsl.core.BooleanBuilder;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import ru.practicum.categories.dto.CategoryMapper;
 import ru.practicum.categories.service.CategoryService;
+import ru.practicum.events.client.EventClient;
 import ru.practicum.events.dto.*;
 import ru.practicum.events.model.Event;
 import ru.practicum.events.model.QEvent;
@@ -19,8 +21,10 @@ import ru.practicum.requests.dto.RequestDto;
 import ru.practicum.requests.dto.RequestMapper;
 import ru.practicum.requests.model.Request;
 import ru.practicum.requests.model.Status;
+import ru.practicum.requests.repository.RequestRepository;
 import ru.practicum.requests.service.RequestService;
 import ru.practicum.users.dto.UserMapper;
+import ru.practicum.users.model.User;
 import ru.practicum.users.service.UserService;
 import ru.practicum.utilits.DateFormatterCustom;
 import ru.practicum.utilits.PageableRequest;
@@ -33,12 +37,15 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final UserService userService;
     private final CategoryService categoryService;
     private final RequestService requestService;
+    private final RequestRepository requestRepository;
 
+    private final EventClient eventClient;
     private final DateFormatterCustom dateFormatterCustom;
 
     //Публикация события админом
@@ -217,22 +224,19 @@ public class EventServiceImpl implements EventService {
     public RequestDto confirmRequestPrivate(Long userId, Long eventId, Long requestId) {
         Event event = validationEvent(eventId);
         Request request = requestService.getRequest(requestId);
+        validationUpdateRequest(event, request);
+        validationUpdateRequestUser(userId, event);
 
-        if (event.getParticipantLimit() == 0 || !event.getRequestModeration()) {
-            return RequestMapper.toRequestDto(request);
-        }
-        if (event.getConfirmedRequests() == event.getParticipantLimit()) {
+        if (event.getParticipantLimit() == event.getConfirmedRequests()) {
             throw new ValidationException("Достигнут лимит запросов на участие в событии");
         }
-
-        increaseConfirmedRequestsPrivate(event);
-        request.setStatus(Status.CONFIRMED);
-
-        if (event.getConfirmedRequests() == event.getParticipantLimit()) {
-            requestService.rejectAllRequestEvent(eventId);
+        if (event.getParticipantLimit() - event.getConfirmedRequests() == 1) {
+            requestRepository.saveAll(requestRepository
+                    .findByEvent_IdAndStatus(eventId, Status.PENDING).stream()
+                    .peek(e -> e.setStatus(Status.CANCELED))
+                    .collect(Collectors.toList()));
         }
-
-        requestService.addRequest(request);
+        request.setStatus(Status.CONFIRMED);
 
         return RequestMapper.toRequestDto(request);
     }
@@ -255,21 +259,6 @@ public class EventServiceImpl implements EventService {
         return RequestMapper.toRequestDto(request);
     }
 
-    @Override
-    public void increaseConfirmedRequestsPrivate(Event event) {
-        event.setConfirmedRequests(event.getConfirmedRequests() + 1);
-        eventRepository.save(event);
-    }
-
-    @Override
-    public void decreaseConfirmedRequestsPrivate(Event event) {
-        if (event.getConfirmedRequests() > 0) {
-            event.setConfirmedRequests(event.getConfirmedRequests() - 1);
-        }
-
-        eventRepository.save(event);
-    }
-
     //Получение события
     @Override
     public Event getEventPrivate(Long eventId) {
@@ -288,6 +277,7 @@ public class EventServiceImpl implements EventService {
                                                   int from,
                                                   int size) {
         BooleanBuilder builder = new BooleanBuilder();
+        Pageable pageable = PageableRequest.of(from, size);
 
         textOptional.ifPresent(text -> builder.and(QEvent.event.annotation.likeIgnoreCase(text)
                 .or(QEvent.event.description.likeIgnoreCase(text))));
@@ -302,22 +292,24 @@ public class EventServiceImpl implements EventService {
         rangeEndOptional.ifPresent(end -> builder.and(QEvent.event.eventDate
                 .before(dateFormatterCustom.stringToDate(end))));
 
-        Page<Event> events = eventRepository.findAll(builder, PageableRequest.of(from, size));
+        List<Event> events = eventRepository.findAll(builder, pageable).stream().collect(Collectors.toList());
+
+        setViews(events);
 
         sortOptional.flatMap(s -> Optional.ofNullable(EventSort.from(s))).ifPresent(sort -> {
             switch (sort) {
                 case EVENT_DATE:
-                    events.stream().sorted(Comparator.comparing(Event::getEventDate).reversed());
+                    events.sort(Comparator.comparing(Event::getEventDate));
                     break;
                 case VIEWS:
-                    events.stream().sorted(Comparator.comparing(Event::getViews).reversed());
+                    events.sort(Comparator.comparing(Event::getViews));
                     break;
                 default:
-                    events.stream().sorted(Comparator.comparing(Event::getId));
+                    events.sort(Comparator.comparing(Event::getId));
             }
         });
 
-        return EventMapper.toEventShortDtoPageList(events);
+        return EventMapper.toEventShortDtoList(events);
     }
 
     //Получение события
@@ -329,7 +321,24 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Такого события не существует");
         }
 
+        setViews(List.of(event));
+
         return EventMapper.toEventFullDto(event);
+    }
+
+    private void setViews(List<Event> events) {
+        try {
+            events.forEach(event -> {
+                List<ViewStatisticDto> views = eventClient.getHits(event.getCreatedOn(), LocalDateTime.now(),
+                                new String[]{"/events/" + event.getId()}, false)
+                        .getBody();
+                if (views != null && views.size() > 0) {
+                    event.setViews(views.get(0).getHits());
+                }
+            });
+        } catch (RestClientException e) {
+            log.info("Соединение с сервисом отсутствует");
+        }
     }
 
     private Event validationEvent(Long eventId) {
@@ -370,6 +379,25 @@ public class EventServiceImpl implements EventService {
         }
         if (eventNewDto.getTitle() != null) {
             event.setTitle(eventNewDto.getTitle());
+        }
+    }
+
+    private void validationUpdateRequest(Event event, Request request) {
+        if (event.getParticipantLimit() == 0 || !event.getRequestModeration()) {
+            throw new ValidationException("Этому запросу нельзя изменить статус");
+        }
+        if (!request.getStatus().equals(Status.PENDING)) {
+            throw new ValidationException("Запрос не в статусе ожидания");
+        }
+        if (!request.getEvent().getId().equals(event.getId())) {
+            throw new ValidationException("Запрос не соответствует событию");
+        }
+    }
+
+    private void validationUpdateRequestUser(Long userId, Event event) {
+        User initiator = userService.getUser(userId);
+        if (!event.getInitiator().getId().equals(initiator.getId())) {
+            throw new ValidationException("Нельзя изменить чужой запрос");
         }
     }
 }

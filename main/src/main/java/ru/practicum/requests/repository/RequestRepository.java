@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import ru.practicum.requests.model.Request;
+import ru.practicum.requests.model.Status;
 
 import java.util.List;
 
@@ -16,4 +17,6 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     @Modifying(clearAutomatically = true)
     @Query(value = "UPDATE requests SET status = 'REJECTED' WHERE event_id = ?1", nativeQuery = true)
     void rejectAll(Long eventId);
+
+    List<Request> findByEvent_IdAndStatus(Long id, Status status);
 }

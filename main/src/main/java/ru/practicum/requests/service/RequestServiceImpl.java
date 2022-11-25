@@ -47,7 +47,6 @@ public class RequestServiceImpl implements RequestService {
             request.setStatus(Status.PENDING);
         } else {
             request.setStatus(Status.CONFIRMED);
-            eventService.increaseConfirmedRequestsPrivate(event);
         }
 
         request.setEvent(event);
@@ -67,9 +66,6 @@ public class RequestServiceImpl implements RequestService {
         }
         if (request.getStatus().equals(Status.REJECTED) || request.getStatus().equals(Status.CANCELED)) {
             throw new ValidationException("Заявка уже отклонена");
-        }
-        if (request.getStatus().equals(Status.CONFIRMED)) {
-            eventService.decreaseConfirmedRequestsPrivate(eventService.getEventPrivate(request.getEvent().getId()));
         }
 
         request.setStatus(Status.CANCELED);

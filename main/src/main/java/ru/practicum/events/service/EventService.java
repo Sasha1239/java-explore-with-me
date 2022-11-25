@@ -32,10 +32,6 @@ public interface EventService {
 
     RequestDto rejectRequestPrivate(Long userId, Long eventId, Long requestId);
 
-    void increaseConfirmedRequestsPrivate(Event event);
-
-    void decreaseConfirmedRequestsPrivate(Event event);
-
     Event getEventPrivate(Long eventId);
 
     List<EventShortDto> getAllPublicEvents(Optional<String> textOptional,
