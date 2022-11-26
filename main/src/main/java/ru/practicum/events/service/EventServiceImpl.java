@@ -236,7 +236,13 @@ public class EventServiceImpl implements EventService {
                     .peek(e -> e.setStatus(Status.CANCELED))
                     .collect(Collectors.toList()));
         }
+
+        List<Request> requests = requestRepository.findByEvent_IdAndStatus(eventId, Status.CONFIRMED);
+        event.setConfirmedRequests(requests.size());
+
         request.setStatus(Status.CONFIRMED);
+
+        requestService.addRequest(request);
 
         return RequestMapper.toRequestDto(request);
     }
@@ -328,14 +334,14 @@ public class EventServiceImpl implements EventService {
 
     private void setViews(List<Event> events) {
         try {
-            events.forEach(event -> {
-                List<ViewStatisticDto> views = eventClient.getHits(event.getCreatedOn(), LocalDateTime.now(),
-                                new String[]{"/events/" + event.getId()}, false)
-                        .getBody();
-                if (views != null && views.size() > 0) {
+            List<ViewStatisticDto> views = eventClient.getHits(events.stream().map(Event::getId)
+                    .collect(Collectors.toList()), false).getBody();
+
+            if (views != null && views.size() > 0) {
+                for (Event event : events) {
                     event.setViews(views.get(0).getHits());
                 }
-            });
+            }
         } catch (RestClientException e) {
             log.info("Соединение с сервисом отсутствует");
         }

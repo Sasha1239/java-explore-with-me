@@ -32,12 +32,25 @@ public class EventClient {
         restTemplateBuilder.postForEntity("/hit", getHttpEntity(makeEndpointHit(request)), EndpointHitDto.class);
     }
 
-    public ResponseEntity<List<ViewStatisticDto>> getHits(LocalDateTime start, LocalDateTime end, String[] uris,
-                                                          boolean unique) {
-        return restTemplateBuilder.exchange("/stats?start={start}&end={end}&uris={uris}&unique={unique}",
+    public ResponseEntity<List<ViewStatisticDto>> getHits(List<Long> eventIds, boolean unique) {
+        LocalDateTime start = LocalDateTime.of(1970, 1, 1, 0, 0, 0);
+        LocalDateTime end = LocalDateTime.now();
+
+        StringBuilder stringBuilder = new StringBuilder("/stats");
+
+        stringBuilder.append("?start=")
+                .append(encodeDate(start))
+                .append("&end=")
+                .append(end);
+
+        eventIds.forEach(eventId -> stringBuilder.append("&uris=")
+                .append("/events")
+                .append("/")
+                .append(eventId));
+
+        return restTemplateBuilder.exchange(stringBuilder + "&unique={unique}",
                 HttpMethod.GET, getHttpEntity(null), new ParameterizedTypeReference<>() {
-                }, encodeDate(start),
-                encodeDate(end), uris, unique);
+                }, unique);
     }
 
     private EndpointHitDto makeEndpointHit(HttpServletRequest httpServletRequest) {
