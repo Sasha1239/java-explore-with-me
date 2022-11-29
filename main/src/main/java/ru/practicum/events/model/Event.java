@@ -67,7 +67,7 @@ public class Event {
 
     @Column(name = "title", nullable = false, length = 120)
     private String title;
-    private int views;
+    private Long views;
 
     @WhereJoinTable(clause = "confirmed='TRUE'")
     @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)

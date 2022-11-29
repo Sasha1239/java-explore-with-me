@@ -64,7 +64,7 @@ public class EventMapper {
                 eventNewDto.getRequestModeration(),
                 State.PENDING,
                 eventNewDto.getTitle(),
-                0,
+                0L,
                 null);
     }
 

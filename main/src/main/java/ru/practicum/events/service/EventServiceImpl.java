@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import ru.practicum.categories.dto.CategoryMapper;
 import ru.practicum.categories.service.CategoryService;
@@ -220,6 +221,7 @@ public class EventServiceImpl implements EventService {
     }
 
     //Подтверждение заявки
+    @Transactional
     @Override
     public RequestDto confirmRequestPrivate(Long userId, Long eventId, Long requestId) {
         Event event = validationEvent(eventId);
@@ -237,10 +239,12 @@ public class EventServiceImpl implements EventService {
                     .collect(Collectors.toList()));
         }
 
-        List<Request> requests = requestRepository.findByEvent_IdAndStatus(eventId, Status.CONFIRMED);
-        event.setConfirmedRequests(requests.size());
-
         request.setStatus(Status.CONFIRMED);
+
+        int confirmedRequest = requestRepository.countByEvent_IdAndStatus(eventId, Status.CONFIRMED);
+        event.setConfirmedRequests(confirmedRequest);
+
+        eventRepository.save(event);
 
         requestService.addRequest(request);
 
@@ -337,10 +341,12 @@ public class EventServiceImpl implements EventService {
             List<ViewStatisticDto> views = eventClient.getHits(events.stream().map(Event::getId)
                     .collect(Collectors.toList()), false).getBody();
 
-            if (views != null && views.size() > 0) {
-                for (Event event : events) {
-                    event.setViews(views.get(0).getHits());
-                }
+            Map<Long, Long> viewsMap = Optional.ofNullable(views).orElse(new ArrayList<>()).stream()
+                    .collect(Collectors.toMap(views1 -> Long.getLong(views1.getUri().split("/")[1]),
+                            ViewStatisticDto::getHits));
+
+            for (Event event : events) {
+                event.setViews(viewsMap.getOrDefault(event.getId(), 0L));
             }
         } catch (RestClientException e) {
             log.info("Соединение с сервисом отсутствует");
