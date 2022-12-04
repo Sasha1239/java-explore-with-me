@@ -2,14 +2,11 @@ package ru.practicum.events.model;
 
 import lombok.*;
 
-import org.hibernate.annotations.WhereJoinTable;
 import ru.practicum.categories.model.Category;
 import ru.practicum.users.model.User;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @Setter
@@ -68,13 +65,4 @@ public class Event {
     @Column(name = "title", nullable = false, length = 120)
     private String title;
     private Long views;
-
-    @WhereJoinTable(clause = "confirmed='TRUE'")
-    @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "requests",
-            joinColumns = @JoinColumn(name = "event_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    private List<User> participantList = new ArrayList<>();
 }
