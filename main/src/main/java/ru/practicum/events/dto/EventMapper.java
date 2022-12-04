@@ -64,8 +64,7 @@ public class EventMapper {
                 eventNewDto.getRequestModeration(),
                 State.PENDING,
                 eventNewDto.getTitle(),
-                0L,
-                null);
+                0L);
     }
 
     public static List<EventFullDto> toEventFullDtoPageList(Page<Event> events) {
